@@ -26,6 +26,7 @@ setup(
     packages=[
         'abei',
         'abei.interfaces',
+        'abei.interfaces.procedure',
         'abei.implements',
     ],
     install_requires=[],
