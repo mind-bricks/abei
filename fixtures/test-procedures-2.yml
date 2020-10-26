@@ -1,19 +1,19 @@
 - fn: 'test-procedure-1.1'
   args:
-    - int@py
-    - int@py
+    - int
+    - int
   return:
-    - int@py
-    - int@py
+    - int
+    - int
   doc: 'this is test procedure 1.1'
   statements:
     - name: joint-1
-      call: int@py:add@py
+      call: int-add
       in:
         - $0
         - $1
     - name: joint-2
-      call: int@py:sub@py
+      call: int-sub
       in:
         - $0
         - $1

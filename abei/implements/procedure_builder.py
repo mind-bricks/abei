@@ -52,8 +52,19 @@ class ProcedureJointBuilder(object):
 
     @LazyProperty
     def instance(self):
+        joint_procedure_signature = self.data.get(keyword_joint_procedure)
+        joint_procedure_signatures = joint_procedure_signature.split('@')
+        if len(joint_procedure_signatures) > 2:
+            raise ValueError('invalid joint procedure {}'.format(
+                joint_procedure_signature))
+
         joint_procedure = self.procedure_site.get_procedure(
-            self.data.get(keyword_joint_procedure))
+            joint_procedure_signatures[0],
+            site=(
+                joint_procedure_signatures[1] if
+                len(joint_procedure_signatures) > 1 else None
+            )
+        )
         return self.procedure_builder.procedure_joint_factory.create(
             joint_procedure,
             self.procedure,
@@ -100,7 +111,7 @@ class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
         output_signatures = [str(sig) for sig in output_signatures]
 
         procedure = self.procedure_factory.create(
-            'composite@py',
+            'composite',
             signature=str(procedure_object.get(
                 keyword_procedure_signature, '')),
             docstring=str(procedure_object.get(

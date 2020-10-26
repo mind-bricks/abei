@@ -5,6 +5,12 @@ from .procedure import (
 
 
 class IProcedureSite(IService):
+    @abstractmethod
+    def get_signature(self):
+        """
+        get signature of procedure site
+        :return:
+        """
 
     @abstractmethod
     def get_procedure(self, signature, **kwargs):

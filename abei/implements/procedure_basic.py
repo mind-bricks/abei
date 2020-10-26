@@ -21,7 +21,7 @@ from .procedure_joint_basic import (
 
 
 class ProcedureBasic(IProcedure):
-    signature = 'do_nothing@py'
+    signature = 'doNothing'
     docstring = ''
     input_signatures = []
     output_signatures = []
@@ -75,7 +75,7 @@ class ProcedureBasic(IProcedure):
 
 
 class ProcedureComposite(IProcedureDetail, ProcedureBasic):
-    name = 'composite@py'
+    name = 'composite'
     output_joints = []
     output_indices = []
 
@@ -115,15 +115,16 @@ class ProcedureComposite(IProcedureDetail, ProcedureBasic):
 
 
 class ProcedureBuiltin(ProcedureBasic):
-    name = 'builtin_op@py'
+    name = 'builtin'
+    separator = '-'
 
     def __init__(self, data_class):
-        self.signature = '{}:{}'.format(
-            data_class.signature, self.name)
+        self.signature = '{}{}{}'.format(
+            data_class.signature, self.separator, self.name)
 
 
 class ProcedureUnaryOperator(ProcedureBuiltin):
-    name = 'unary_op@py'
+    name = 'unaryOperator'
     native_function = staticmethod(lambda x: x)
 
     def __init__(self, data_class=ProcedureDataBasic):
@@ -139,7 +140,7 @@ class ProcedureUnaryOperator(ProcedureBuiltin):
 
 
 class ProcedureBinaryOperator(ProcedureBuiltin):
-    name = 'binary_op@py'
+    name = 'binaryOperator'
     native_function = staticmethod(lambda x, y: x)
 
     def __init__(self, data_class=ProcedureDataBasic):
@@ -160,7 +161,7 @@ class ProcedureBinaryOperator(ProcedureBuiltin):
 
 
 class ProcedureComparator(ProcedureBuiltin):
-    name = 'compare@py'
+    name = 'compare'
     native_function = staticmethod(lambda x, y: True)
 
     def __init__(self, data_class=ProcedureDataBasic):
@@ -210,7 +211,7 @@ class ProcedureComparator(ProcedureBuiltin):
 
 
 class ProcedureDiverge(ProcedureBuiltin):
-    name = 'diverge2@py'
+    name = 'diverge2'
 
     def __init__(
             self,
@@ -237,7 +238,7 @@ class ProcedureDiverge(ProcedureBuiltin):
 
 
 class ProcedureConverge(ProcedureBuiltin):
-    name = 'converge2@py'
+    name = 'converge2'
 
     def __init__(
             self,
@@ -264,7 +265,7 @@ class ProcedureConverge(ProcedureBuiltin):
 
 
 class ProcedureProbe(ProcedureBuiltin):
-    name = 'probe@py'
+    name = 'probe'
 
     def __init__(self, data_class=ProcedureDataBasic):
         super().__init__(data_class)
@@ -281,7 +282,7 @@ class ProcedureProbe(ProcedureBuiltin):
 
 
 class ProcedureCast(ProcedureBuiltin):
-    name = 'cast@py'
+    name = 'cast'
     to_data_class = ProcedureDataBasic
 
     def __init__(self, data_class=ProcedureDataBasic):
@@ -297,107 +298,107 @@ class ProcedureCast(ProcedureBuiltin):
 
 
 class ProcedureNot(ProcedureUnaryOperator):
-    name = 'not@py'
+    name = 'not'
     native_function = staticmethod(lambda x: not x)
 
 
 class ProcedureNegate(ProcedureUnaryOperator):
-    name = 'neg@py'
+    name = 'neg'
     native_function = staticmethod(lambda x: -x)
 
 
 class ProcedureSquare(ProcedureUnaryOperator):
-    name = 'sq@py'
+    name = 'sq'
     native_function = staticmethod(lambda x: x * x)
 
 
 class ProcedureAnd(ProcedureBinaryOperator):
-    name = 'and@py'
+    name = 'and'
     native_function = staticmethod(lambda x, y: x and y)
 
 
 class ProcedureOr(ProcedureBinaryOperator):
-    name = 'or@py'
+    name = 'or'
     native_function = staticmethod(lambda x, y: x or y)
 
 
 class ProcedureAdd(ProcedureBinaryOperator):
-    name = 'add@py'
+    name = 'add'
     native_function = staticmethod(lambda x, y: x + y)
 
 
 class ProcedureSubtract(ProcedureBinaryOperator):
-    name = 'sub@py'
+    name = 'sub'
     native_function = staticmethod(lambda x, y: x - y)
 
 
 class ProcedureMultiply(ProcedureBinaryOperator):
-    name = 'mul@py'
+    name = 'mul'
     native_function = staticmethod(lambda x, y: x * y)
 
 
 class ProcedureDivide(ProcedureBinaryOperator):
-    name = 'div@py'
+    name = 'div'
     native_function = staticmethod(lambda x, y: x / y)
 
 
 class ProcedureModulo(ProcedureBinaryOperator):
-    name = 'mod@py'
+    name = 'mod'
     native_function = staticmethod(lambda x, y: x % y)
 
 
 class ProcedureModDivide(ProcedureBinaryOperator):
-    name = 'mod_div@py'
+    name = 'modDiv'
     native_function = staticmethod(lambda x, y: x // y)
 
 
 class ProcedurePower(ProcedureBinaryOperator):
-    name = 'pow@py'
+    name = 'pow'
     native_function = staticmethod(lambda x, y: x ** y)
 
 
 class ProcedureEqual(ProcedureComparator):
-    name = 'eq@py'
+    name = 'eq'
     native_function = staticmethod(lambda x, y: x == y)
 
 
 class ProcedureNotEqual(ProcedureComparator):
-    name = 'ne@py'
+    name = 'ne'
     native_function = staticmethod(lambda x, y: x != y)
 
 
 class ProcedureLessThan(ProcedureComparator):
-    name = 'lt@py'
+    name = 'lt'
     native_function = staticmethod(lambda x, y: x < y)
 
 
 class ProcedureLessThanOrEqual(ProcedureComparator):
-    name = 'lte@py'
+    name = 'lte'
     native_function = staticmethod(lambda x, y: x <= y)
 
 
 class ProcedureGreaterThan(ProcedureComparator):
-    name = 'gt@py'
+    name = 'gt'
     native_function = staticmethod(lambda x, y: x > y)
 
 
 class ProcedureGreaterThanEqual(ProcedureComparator):
-    name = 'gte@py'
+    name = 'gte'
     native_function = staticmethod(lambda x, y: x >= y)
 
 
 class ProcedureCastToBool(ProcedureCast):
-    name = 'cast_to_bool@py'
+    name = 'castToBool'
     to_data_class = ProcedureDataBool
 
 
 class ProcedureCastToInt(ProcedureCast):
-    name = 'cast_to_int@py'
+    name = 'castToInt'
     to_data_class = ProcedureDataInt
 
 
 class ProcedureCastToFloat(ProcedureCast):
-    name = 'cast_to_float@py'
+    name = 'castToFloat'
     to_data_class = ProcedureDataFloat
 
 

@@ -5,7 +5,7 @@ from abei.interfaces import (
 
 
 class ProcedureDataBasic(IProcedureData):
-    signature = 'none@py'
+    signature = 'none'
     label = 'none'
     value_type = type(None)
     value = None
@@ -37,28 +37,28 @@ class ProcedureDataBasic(IProcedureData):
 
 
 class ProcedureDataBool(ProcedureDataBasic):
-    signature = 'bool@py'
+    signature = 'bool'
     label = 'bool'
     value_type = bool
     value = True
 
 
 class ProcedureDataInt(ProcedureDataBasic):
-    signature = 'int@py'
+    signature = 'int'
     label = 'int'
     value_type = int
     value = 0
 
 
 class ProcedureDataFloat(ProcedureDataBasic):
-    signature = 'float@py'
+    signature = 'float'
     label = 'float'
     value_type = float
     value = 0.0
 
 
 class ProcedureDataString(ProcedureDataBasic):
-    signature = 'string@py'
+    signature = 'string'
     label = 'string'
     value_type = str
     value = ''
