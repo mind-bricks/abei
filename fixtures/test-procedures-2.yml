@@ -8,12 +8,12 @@
   doc: 'this is test procedure 1.1'
   statements:
     - name: joint-1
-      call: int-add
+      call: add[int]
       in:
         - $0
         - $1
     - name: joint-2
-      call: int-sub
+      call: sub[int]
       in:
         - $0
         - $1

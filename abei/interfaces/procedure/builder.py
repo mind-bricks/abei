@@ -1,4 +1,4 @@
-from .procedure import (
+from .base import (
     abstractmethod,
     IService,
 )

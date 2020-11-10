@@ -8,27 +8,27 @@
   doc: 'count number'
   statements:
     - name: count-has-started
-      call: int-probe
+      call: probe[int]
       in:
         - count-step[0]
     - name: count-has-finished
-      call: int-gte
+      call: gte[int]
       in:
         - count-step[0]
         - $2
     - name: count-start
-      call: int-converge2
+      call: converge2[int]
       in:
         - count-has-started[0]
         - $0
         - count-step[0]
     - name: count-step
-      call: int-add
+      call: add[int]
       in:
         - count-start[0]
         - $1
     - name: count-finish
-      call: int-diverge2
+      call: diverge2[int]
       in:
         - count-has-finished[0]
         - count-step[0]

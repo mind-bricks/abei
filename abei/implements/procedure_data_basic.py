@@ -29,11 +29,15 @@ class ProcedureDataBasic(IProcedureData):
         return self.value
 
     def set_value(self, value):
-        self.value = (
-            value if
-            isinstance(value, self.value_type) else
-            self.value_type(value)
-        )
+        try:
+            self.value = (
+                value if
+                isinstance(value, self.value_type) else
+                self.value_type(value)
+            )
+            return True
+        except (ValueError, TypeError):
+            return False
 
 
 class ProcedureDataBool(ProcedureDataBasic):
@@ -64,6 +68,20 @@ class ProcedureDataString(ProcedureDataBasic):
     value = ''
 
 
+class ProcedureDataArray(ProcedureDataBasic):
+    signature = 'array'
+    label = 'array'
+    value_type = list
+    value = list()
+
+
+class ProcedureDataMap(ProcedureDataBasic):
+    signature = 'map'
+    label = 'map'
+    value_type = dict
+    value = dict()
+
+
 class ProcedureDataFactory(IProcedureDataFactory):
     def __init__(self, service_site, **kwargs):
         self.data_classes = dict([
@@ -71,6 +89,8 @@ class ProcedureDataFactory(IProcedureDataFactory):
             (ProcedureDataInt.signature, ProcedureDataInt),
             (ProcedureDataFloat.signature, ProcedureDataFloat),
             (ProcedureDataString.signature, ProcedureDataString),
+            (ProcedureDataArray.signature, ProcedureDataArray),
+            (ProcedureDataMap.signature, ProcedureDataMap),
         ])
 
     def create(self, signature, **kwargs):

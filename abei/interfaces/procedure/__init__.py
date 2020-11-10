@@ -15,7 +15,7 @@ __all__ = [
     'IProcedureBuilder',
 ]
 
-from .procedure import (
+from .base import (
     IProcedure,
     IProcedureFactory,
 )

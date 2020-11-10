@@ -1,4 +1,4 @@
-from .procedure import (
+from .base import (
     abstractmethod,
     IService,
 )
@@ -30,7 +30,7 @@ class IProcedureData(IService):
     def get_value(self):
         """
         get data value
-        :return:
+        :return value:
         """
 
     @abstractmethod
@@ -38,7 +38,7 @@ class IProcedureData(IService):
         """
         set data value
         :param value:
-        :return:
+        :return boolean:
         """
 
 

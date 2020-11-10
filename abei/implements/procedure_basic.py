@@ -116,11 +116,12 @@ class ProcedureComposite(IProcedureDetail, ProcedureBasic):
 
 class ProcedureBuiltin(ProcedureBasic):
     name = 'builtin'
-    separator = '-'
 
     def __init__(self, data_class):
-        self.signature = '{}{}{}'.format(
-            data_class.signature, self.separator, self.name)
+        self.signature = '{}[{}]'.format(
+            self.name,
+            data_class.signature,
+        )
 
 
 class ProcedureUnaryOperator(ProcedureBuiltin):

@@ -8,12 +8,12 @@
   doc: 'this is test procedure 1.1'
   statements:
     - name: joint-1
-      call: int-add
+      call: add[int]
       in:
         - $0
         - $1
     - name: joint-2
-      call: int-sub
+      call: sub[int]
       in:
         - $0
         - $1
@@ -31,22 +31,22 @@
   doc: 'this is test procedure 1.2'
   statements:
     - name: joint-1
-      call: float-add
+      call: add[float]
       in:
         - $0
         - $1
     - name: joint-2
-      call: float-mul
+      call: mul[float]
       in:
         - $0
         - $1
     - name: joint-3
-      call: float-mul
+      call: mul[float]
       in:
         - joint-1[0]
         - joint-2[0]
     - name: joint-4
-      call: float-add
+      call: add[float]
       in:
         - joint-1[0]
         - joint-2[0]
@@ -65,12 +65,12 @@
   doc: '(x + y) * z'
   statements:
     - name: joint-1
-      call: float-add
+      call: add[float]
       in:
         - $0
         - $1
     - name: joint-2
-      call: float-mul
+      call: mul[float]
       in:
         - joint-1[0]
         - $2
@@ -87,12 +87,12 @@
   doc: 'x + y * z'
   statements:
     - name: joint-1
-      call: float-mul
+      call: mul[float]
       in:
         - $1
         - $2
     - name: joint-2
-      call: float-add
+      call: add[float]
       in:
         - $0
         - joint-1[0]
@@ -109,17 +109,17 @@
   doc: 'z ? x + y : x - y'
   statements:
     - name: x-plus-y
-      call: float-add
+      call: add[float]
       in:
         - $1
         - $2
     - name: x-minus-y
-      call: float-sub
+      call: sub[float]
       in:
         - $1
         - $2
     - name: plus-or-minus
-      call: float-converge2
+      call: converge2[float]
       in:
         - $0
         - x-plus-y[0]
@@ -138,22 +138,22 @@
   doc: 'z ? x + y : x - y (optimized)'
   statements:
     - name: select-x
-      call: float-diverge2@builtin
+      call: diverge2[float]@builtin
       in:
         - $0
         - $1
     - name: x-plus-y
-      call: float-add@builtin
+      call: add[float]@builtin
       in:
         - select-x[0]
         - $2
     - name: x-minus-y
-      call: float-sub@builtin
+      call: sub[float]@builtin
       in:
         - select-x[1]
         - $2
     - name: plus-or-minus
-      call: float-converge2@builtin
+      call: converge2[float]@builtin
       in:
         - $0
         - x-plus-y[0]
