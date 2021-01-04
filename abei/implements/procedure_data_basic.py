@@ -1,29 +1,26 @@
 from abei.interfaces import (
     IProcedureData,
+    IProcedureDataClass,
     IProcedureDataFactory,
 )
 
 
 class ProcedureDataBasic(IProcedureData):
-    signature = 'none'
-    label = 'none'
-    value_type = type(None)
-    value = None
 
-    def __init__(self, value=None):
-        if value is not None:
-            self.set_value(value)
+    def __init__(self, cls, value_type, value):
+        self.cls = cls
+        self.value_type = value_type
+        self.value = value
+
+    def get_class(self):
+        return self.cls
 
     def clone(self):
-        instance = self.__class__()
-        instance.value = self.value
-        return instance
-
-    def get_signature(self):
-        return self.signature
-
-    def get_label(self):
-        return self.label
+        return ProcedureDataBasic(
+            self.cls,
+            self.value_type,
+            self.value,
+        )
 
     def get_value(self):
         return self.value
@@ -40,74 +37,103 @@ class ProcedureDataBasic(IProcedureData):
             return False
 
 
-class ProcedureDataBool(ProcedureDataBasic):
-    signature = 'bool'
-    label = 'bool'
-    value_type = bool
-    value = True
+class ProcedureDataClassBasic(IProcedureDataClass):
+
+    def __init__(
+            self,
+            signature,
+            label,
+            value_type,
+            value_default,
+    ):
+        self.signature = signature
+        self.label = label
+        self.value_type = value_type
+        self.value_default = value_default
+
+    def get_signature(self):
+        return self.signature
+
+    def get_label(self):
+        return self.label
+
+    def instantiate(self, *args, data_class=None, **kwargs):
+        obj = ProcedureDataBasic(
+            data_class or self,
+            self.value_type,
+            self.value_default,
+        )
+        value = args[0] if args else None
+        if value is not None:
+            obj.set_value(value)
+        return obj
 
 
-class ProcedureDataInt(ProcedureDataBasic):
-    signature = 'int'
-    label = 'int'
-    value_type = int
-    value = 0
-
-
-class ProcedureDataFloat(ProcedureDataBasic):
-    signature = 'float'
-    label = 'float'
-    value_type = float
-    value = 0.0
-
-
-class ProcedureDataString(ProcedureDataBasic):
-    signature = 'string'
-    label = 'string'
-    value_type = str
-    value = ''
-
-
-class ProcedureDataArray(ProcedureDataBasic):
-    signature = 'array'
-    label = 'array'
-    value_type = list
-    value = list()
-
-
-class ProcedureDataMap(ProcedureDataBasic):
-    signature = 'map'
-    label = 'map'
-    value_type = dict
-    value = dict()
+data_none = ProcedureDataClassBasic(
+    signature='none',
+    label='none',
+    value_type=type(None),
+    value_default=None,
+)
+data_bool = ProcedureDataClassBasic(
+    signature='bool',
+    label='bool',
+    value_type=bool,
+    value_default=True,
+)
+data_int = ProcedureDataClassBasic(
+    signature='int',
+    label='int',
+    value_type=int,
+    value_default=0,
+)
+data_float = ProcedureDataClassBasic(
+    signature='float',
+    label='float',
+    value_type=float,
+    value_default=0.0,
+)
+data_string = ProcedureDataClassBasic(
+    signature='string',
+    label='string',
+    value_type=str,
+    value_default='',
+)
 
 
 class ProcedureDataFactory(IProcedureDataFactory):
     def __init__(self, service_site, **kwargs):
         self.data_classes = dict([
-            (ProcedureDataBool.signature, ProcedureDataBool),
-            (ProcedureDataInt.signature, ProcedureDataInt),
-            (ProcedureDataFloat.signature, ProcedureDataFloat),
-            (ProcedureDataString.signature, ProcedureDataString),
-            (ProcedureDataArray.signature, ProcedureDataArray),
-            (ProcedureDataMap.signature, ProcedureDataMap),
+            (data_none.get_signature(), data_none),
+            (data_bool.get_signature(), data_bool),
+            (data_int.get_signature(), data_int),
+            (data_float.get_signature(), data_float),
+            (data_string.get_signature(), data_string),
         ])
 
-    def create(self, signature, **kwargs):
-        return self.get_class(signature)(**kwargs)
+    def create(self, class_signature, *args, **kwargs):
+        data_class = self.get_class(class_signature)
+        return data_class.instantiate(*args, **kwargs)
 
-    def get_class(self, signature):
-        data_class = self.query_class(signature)
+    def get_class(self, class_signature):
+        data_class = self.query_class(class_signature)
         if not data_class:
             raise LookupError('data class not found')
         return data_class
 
-    def query_class(self, signature):
-        return self.data_classes.get(signature)
+    def query_class(self, class_signature):
+        return self.data_classes.get(class_signature)
 
-    def register_class(self, signature, procedure_data_class, **kwargs):
-        assert signature not in self.data_classes
-        self.data_classes[signature] = procedure_data_class
+    def register_class(
+            self,
+            class_signature,
+            procedure_data_class,
+            **kwargs,
+    ):
+        if class_signature in self.data_classes:
+            raise AssertionError(
+                '{} already registered'.format(class_signature))
+        self.data_classes[class_signature] = procedure_data_class
 
     def iterate_classes(self):
         return self.data_classes.keys()

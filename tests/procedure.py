@@ -14,13 +14,28 @@ from abei.interfaces import (
     service_entry as _
 )
 from abei.implements.procedure_basic import (
-    ProcedureBasic,
+    ProcedureClassBasic,
+    ProcedureUnaryOperator,
 )
 from abei.implements.procedure_data_basic import (
-    ProcedureDataBasic,
+    ProcedureDataClassBasic,
 )
 
 from .basic import TestCaseBasic
+
+data_class_test = ProcedureDataClassBasic(
+    signature='test',
+    label='test',
+    value_type=type(None),
+    value_default=None,
+)
+
+class_test = ProcedureClassBasic(
+    signature='test',
+    docstring='test',
+    procedure_type=ProcedureUnaryOperator,
+    native_function=lambda x: x,
+)
 
 
 class TestProcedure(TestCaseBasic):
@@ -34,12 +49,13 @@ class TestProcedure(TestCaseBasic):
         procedure_class_count = len(procedure_classes)
         self.assertNotEqual(procedure_class_count, 0)
 
-        service.register_class(ProcedureBasic.signature, ProcedureBasic)
+        service.register_class(class_test.get_signature(), class_test)
         procedure_classes = list(service.iterate_classes())
         self.assertEqual(len(procedure_classes), procedure_class_count + 1)
 
-        instance = service.create(ProcedureBasic.signature)
-        self.assertIsInstance(instance, ProcedureBasic)
+        instance = service.create(
+            class_test.get_signature(), data_class=data_class_test)
+        self.assertIsNotNone(instance)
 
     def test_procedure_data_factory(self):
         service = self.service_site.get_service(_(IProcedureDataFactory))
@@ -48,12 +64,12 @@ class TestProcedure(TestCaseBasic):
         self.assertNotEqual(data_class_count, 0)
 
         service.register_class(
-            ProcedureDataBasic.signature, ProcedureDataBasic)
+            data_class_test.get_signature(), data_class_test)
         data_classes = list(service.iterate_classes())
         self.assertEqual(len(data_classes), data_class_count + 1)
 
-        instance = service.create(ProcedureDataBasic.signature)
-        self.assertIsInstance(instance, ProcedureDataBasic)
+        instance = service.create(data_class_test.get_signature())
+        self.assertIs(instance.get_class(), data_class_test)
 
     def test_procedure_joint_factory(self):
         factory_p = self.service_site.get_service(_(IProcedureFactory))
@@ -156,8 +172,8 @@ class TestProcedureRunSimple(TestProcedureRunBasic):
             procedure.get_docstring(),
             'this is test procedure 1.1'
         )
-        input_1 = self.procedure_data_factory.create('int')
-        input_2 = self.procedure_data_factory.create('int')
+        input_1 = self.procedure_site.get_data_class('int').instantiate()
+        input_2 = self.procedure_site.get_data_class('int').instantiate()
         input_1.set_value(1)
         input_2.set_value(2)
         outputs = procedure.run([input_1, input_2])
@@ -173,8 +189,8 @@ class TestProcedureRunSimple(TestProcedureRunBasic):
             procedure.get_docstring(),
             'this is test procedure 1.2'
         )
-        input_1 = self.procedure_data_factory.create('int')
-        input_2 = self.procedure_data_factory.create('int')
+        input_1 = self.procedure_site.get_data_class('int').instantiate()
+        input_2 = self.procedure_site.get_data_class('int').instantiate()
         input_1.set_value(1)
         input_2.set_value(2)
         self.assertRaises(
@@ -182,8 +198,8 @@ class TestProcedureRunSimple(TestProcedureRunBasic):
             lambda: procedure.run([input_1, input_2])
         )
 
-        input_1 = self.procedure_data_factory.create('float')
-        input_2 = self.procedure_data_factory.create('float')
+        input_1 = self.procedure_site.get_data_class('float').instantiate()
+        input_2 = self.procedure_site.get_data_class('float').instantiate()
         input_1.set_value(2.0)
         input_2.set_value(3.0)
         outputs = procedure.run([input_1, input_2])
@@ -199,9 +215,9 @@ class TestProcedureRunSimple(TestProcedureRunBasic):
         x = random.random() * random.randint(1, 10)
         y = random.random() * random.randint(1, 10)
         z = random.random() * random.randint(1, 10)
-        input_1 = self.procedure_data_factory.create('float', value=x)
-        input_2 = self.procedure_data_factory.create('float', value=y)
-        input_3 = self.procedure_data_factory.create('float', value=z)
+        input_1 = self.procedure_site.get_data_class('float').instantiate(x)
+        input_2 = self.procedure_site.get_data_class('float').instantiate(y)
+        input_3 = self.procedure_site.get_data_class('float').instantiate(z)
         outputs = procedure.run([input_1, input_2, input_3])
         self.assertEqual(len(outputs), 1)
         self.assertEqual(outputs[0].get_value(), (x + y) * z)
@@ -213,9 +229,9 @@ class TestProcedureRunSimple(TestProcedureRunBasic):
         x = random.random() * random.randint(1, 10)
         y = random.random() * random.randint(1, 10)
         z = random.random() * random.randint(1, 10)
-        input_1 = self.procedure_data_factory.create('float', value=x)
-        input_2 = self.procedure_data_factory.create('float', value=y)
-        input_3 = self.procedure_data_factory.create('float', value=z)
+        input_1 = self.procedure_site.get_data_class('float').instantiate(x)
+        input_2 = self.procedure_site.get_data_class('float').instantiate(y)
+        input_3 = self.procedure_site.get_data_class('float').instantiate(z)
         outputs = procedure.run([input_1, input_2, input_3])
         self.assertEqual(len(outputs), 1)
         self.assertEqual(outputs[0].get_value(), x + y * z)
@@ -227,16 +243,16 @@ class TestProcedureRunSimple(TestProcedureRunBasic):
         x = random.random() * random.randint(1, 10)
         y = random.random() * random.randint(1, 10)
 
-        input_1 = self.procedure_data_factory.create('bool', value=True)
-        input_2 = self.procedure_data_factory.create('float', value=x)
-        input_3 = self.procedure_data_factory.create('float', value=y)
+        input_1 = self.procedure_site.get_data_class('bool').instantiate(True)
+        input_2 = self.procedure_site.get_data_class('float').instantiate(x)
+        input_3 = self.procedure_site.get_data_class('float').instantiate(y)
         outputs = procedure.run([input_1, input_2, input_3])
         self.assertEqual(len(outputs), 1)
         self.assertEqual(outputs[0].get_value(), x + y)
 
-        input_1 = self.procedure_data_factory.create('bool', value=False)
-        input_2 = self.procedure_data_factory.create('float', value=x)
-        input_3 = self.procedure_data_factory.create('float', value=y)
+        input_1 = self.procedure_site.get_data_class('bool').instantiate(False)
+        input_2 = self.procedure_site.get_data_class('float').instantiate(x)
+        input_3 = self.procedure_site.get_data_class('float').instantiate(y)
         outputs = procedure.run([input_1, input_2, input_3])
         self.assertEqual(len(outputs), 1)
         self.assertEqual(outputs[0].get_value(), x - y)
@@ -249,16 +265,16 @@ class TestProcedureRunSimple(TestProcedureRunBasic):
         x = random.random() * random.randint(1, 10)
         y = random.random() * random.randint(1, 10)
 
-        input_1 = self.procedure_data_factory.create('bool', value=True)
-        input_2 = self.procedure_data_factory.create('float', value=x)
-        input_3 = self.procedure_data_factory.create('float', value=y)
+        input_1 = self.procedure_site.get_data_class('bool').instantiate(True)
+        input_2 = self.procedure_site.get_data_class('float').instantiate(x)
+        input_3 = self.procedure_site.get_data_class('float').instantiate(y)
         outputs = procedure.run([input_1, input_2, input_3])
         self.assertEqual(len(outputs), 1)
         self.assertEqual(outputs[0].get_value(), x + y)
 
-        input_1 = self.procedure_data_factory.create('bool', value=False)
-        input_2 = self.procedure_data_factory.create('float', value=x)
-        input_3 = self.procedure_data_factory.create('float', value=y)
+        input_1 = self.procedure_site.get_data_class('bool').instantiate(False)
+        input_2 = self.procedure_site.get_data_class('float').instantiate(x)
+        input_3 = self.procedure_site.get_data_class('float').instantiate(y)
         outputs = procedure.run([input_1, input_2, input_3])
         self.assertEqual(len(outputs), 1)
         self.assertEqual(outputs[0].get_value(), x - y)
@@ -276,8 +292,8 @@ class TestProcedureRunAlgorithm(TestProcedureRunBasic):
     def test_number_count(self):
         procedure = self.procedure_site.get_procedure('number-count')
         self.assertIsNotNone(procedure)
-        input_1 = self.procedure_data_factory.create('int', value=1)
-        input_2 = self.procedure_data_factory.create('int', value=1)
-        input_3 = self.procedure_data_factory.create('int', value=10)
+        input_1 = self.procedure_data_factory.create('int', 1)
+        input_2 = self.procedure_data_factory.create('int', 1)
+        input_3 = self.procedure_data_factory.create('int', 10)
         outputs = procedure.run([input_1, input_2, input_3])
         assert outputs

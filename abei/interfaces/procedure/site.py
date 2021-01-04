@@ -16,7 +16,7 @@ class IProcedureSite(IService):
     def get_procedure(self, signature, **kwargs):
         """
         get procedure instance by signature
-        raise exception if no service found
+        raise exception if no procedure found
         """
 
     @abstractmethod
@@ -35,6 +35,31 @@ class IProcedureSite(IService):
     def iterate_procedures(self):
         """
         iterate procedures
+        """
+
+    @abstractmethod
+    def get_data_class(self, signature, **kwargs):
+        """
+        get procedure data class by signature
+        raise exception if no data found
+        """
+
+    @abstractmethod
+    def query_data_class(self, signature, **kwargs):
+        """
+        query procedure data class by signature
+        """
+
+    @abstractmethod
+    def register_data_class(self, signature, **kwargs):
+        """
+        register procedure data class by signature
+        """
+
+    @abstractmethod
+    def iterate_data_classes(self):
+        """
+        iterate procedure data class
         """
 
     @abstractmethod

@@ -4,7 +4,7 @@ from .base import (
 )
 
 
-class IProcedureDetail(IService):
+class IProcedureLink(IService):
     @abstractmethod
     def get_joints(self):
         """
@@ -22,7 +22,7 @@ class IProcedureDetail(IService):
         """
 
 
-class IProcedureJoint(IProcedureDetail):
+class IProcedureJoint(IProcedureLink):
     @abstractmethod
     def get_signature(self):
         """

@@ -2,10 +2,12 @@ __all__ = [
     'abstractmethod',
     'ICache',
     'IProcedure',
+    'IProcedureClass',
     'IProcedureFactory',
+    'IProcedureDataClass',
     'IProcedureData',
     'IProcedureDataFactory',
-    'IProcedureDetail',
+    'IProcedureLink',
     'IProcedureJoint',
     'IProcedureJointFactory',
     'IProcedureSite',
@@ -20,6 +22,20 @@ __all__ = [
 ]
 
 from .cache import ICache
+from .procedure import (
+    IProcedureClass,
+    IProcedure,
+    IProcedureFactory,
+    IProcedureDataClass,
+    IProcedureData,
+    IProcedureDataFactory,
+    IProcedureLink,
+    IProcedureJoint,
+    IProcedureJointFactory,
+    IProcedureSite,
+    IProcedureSiteFactory,
+    IProcedureBuilder,
+)
 from .service import (
     abstractmethod,
     IService,
@@ -27,17 +43,5 @@ from .service import (
     IServiceSite,
     ServiceEntry,
     service_entry,
-)
-from .procedure import (
-    IProcedure,
-    IProcedureFactory,
-    IProcedureData,
-    IProcedureDataFactory,
-    IProcedureDetail,
-    IProcedureJoint,
-    IProcedureJointFactory,
-    IProcedureSite,
-    IProcedureSiteFactory,
-    IProcedureBuilder,
 )
 from .storage import IStorage

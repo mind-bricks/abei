@@ -1,10 +1,10 @@
 - fn: 'test-procedure-1.1'
   args:
-    - int
-    - int
+    - int@builtin
+    - int@builtin
   return:
-    - int
-    - int
+    - int@builtin
+    - int@builtin
   doc: 'this is test procedure 1.1'
   statements:
     - name: joint-1

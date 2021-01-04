@@ -5,24 +5,18 @@ from .base import (
 
 
 class IProcedureData(IService):
+
+    @abstractmethod
+    def get_class(self):
+        """
+        get class of procedure data
+        :return:
+        """
+
     @abstractmethod
     def clone(self):
         """
-        clone current procedure data
-        :return:
-        """
-
-    @abstractmethod
-    def get_signature(self):
-        """
-        get signature of procedure data
-        :return:
-        """
-
-    @abstractmethod
-    def get_label(self):
-        """
-        get label of procedure data
+        clone procedure data
         :return:
         """
 
@@ -42,35 +36,59 @@ class IProcedureData(IService):
         """
 
 
+class IProcedureDataClass(IService):
+
+    @abstractmethod
+    def get_signature(self):
+        """
+        get signature of procedure data class
+        :return:
+        """
+
+    @abstractmethod
+    def get_label(self):
+        """
+        get label of procedure class
+        :return:
+        """
+
+    @abstractmethod
+    def instantiate(self, *args, **kwargs):
+        """
+        instantiate procedure data
+        """
+
+
 class IProcedureDataFactory(IService):
 
     @abstractmethod
-    def create(self, signature, **kwargs):
+    def create(self, class_signature, *args, **kwargs):
         """
-        create data
-        :param signature:
+        create procedure data directly
+        :param class_signature:
+        :param args:
         :param kwargs:
         :return:
         """
 
     @abstractmethod
-    def get_class(self, signature):
+    def get_class(self, class_signature):
         """
-        :param signature:
+        :param class_signature:
         :return:
         """
 
     @abstractmethod
-    def query_class(self, signature):
+    def query_class(self, class_signature):
         """
-        :param signature:
+        :param class_signature:
         :return:
         """
 
     @abstractmethod
-    def register_class(self, signature, procedure_data_class, **kwargs):
+    def register_class(self, class_signature, procedure_data_class, **kwargs):
         """
-        :param signature:
+        :param class_signature:
         :param procedure_data_class:
         :param kwargs:
         :return:

@@ -5,7 +5,7 @@ from abei.interfaces import (
     IProcedure,
     IProcedureJoint,
     IProcedureJointFactory,
-    IProcedureDetail,
+    IProcedureLink,
 )
 
 
@@ -83,7 +83,7 @@ class ProcedureJointBasic(IProcedureJoint):
         assert isinstance(inner_procedure, IProcedure)
         assert (
             isinstance(outer_procedure, IProcedure) and
-            isinstance(outer_procedure, IProcedureDetail)
+            isinstance(outer_procedure, IProcedureLink)
         )
         self.signature = signature or urlsafe_b64encode(
             uuid1().bytes).strip(b'=').decode('utf8')
@@ -141,5 +141,5 @@ class ProcedureJointFactory(IProcedureJointFactory):
         return ProcedureJointBasic(
             inner_procedure=inner_procedure,
             outer_procedure=outer_procedure,
-            **kwargs
+            **kwargs,
         )

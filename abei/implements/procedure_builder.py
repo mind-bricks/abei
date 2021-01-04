@@ -1,18 +1,16 @@
-from abei.interfaces import (
-    IProcedure,
-    IProcedureDetail,
-    IProcedureFactory,
-    IProcedureJointFactory,
-    IProcedureBuilder,
-    service_entry as _,
-)
-
 from abei.implements.service_basic import ServiceBasic
 from abei.implements.util import (
     FileLikeWrapper,
     LazyProperty,
 )
-
+from abei.interfaces import (
+    IProcedure,
+    IProcedureLink,
+    IProcedureFactory,
+    IProcedureJointFactory,
+    IProcedureBuilder,
+    service_entry as _,
+)
 from .procedure_joint_basic import (
     joint_validate_dependents,
 )
@@ -26,6 +24,17 @@ keyword_joints = 'statements'
 keyword_joint_name = 'name'
 keyword_joint_procedure = 'call'
 keyword_joint_inputs = 'in'
+
+
+def parse_signature(signature):
+    signature_list = signature.split('@')
+    if len(signature_list) > 2:
+        raise ValueError('invalid signature {}'.format(signature))
+
+    if len(signature_list) == 2:
+        return signature_list[0], signature_list[1]
+
+    return signature_list[0], None
 
 
 class ProcedureJointBuilder(object):
@@ -53,18 +62,13 @@ class ProcedureJointBuilder(object):
     @LazyProperty
     def instance(self):
         joint_procedure_signature = self.data.get(keyword_joint_procedure)
-        joint_procedure_signatures = joint_procedure_signature.split('@')
-        if len(joint_procedure_signatures) > 2:
-            raise ValueError('invalid joint procedure {}'.format(
-                joint_procedure_signature))
+        signature, site = parse_signature(joint_procedure_signature)
 
         joint_procedure = self.procedure_site.get_procedure(
-            joint_procedure_signatures[0],
-            site=(
-                joint_procedure_signatures[1] if
-                len(joint_procedure_signatures) > 1 else None
-            )
+            signature,
+            site=site,
         )
+
         return self.procedure_builder.procedure_joint_factory.create(
             joint_procedure,
             self.procedure,
@@ -89,26 +93,34 @@ class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
     def get_dependencies(cls):
         return ['PyYAML']
 
+    def load_procedure_data(self, procedure_site, procedure_data_object):
+        raise NotImplementedError()
+
     def load_procedure(self, procedure_site, procedure_object):
         if not isinstance(procedure_object, dict):
             raise ValueError(
                 'invalid procedure in configuration file')
+
+        def get_full_signature(sig):
+            sig, site = parse_signature(sig)
+            data = procedure_site.get_data_class(sig, site=site)
+            return data.get_signature()
 
         input_signatures = procedure_object.get(
             keyword_procedure_input_signatures, [])
         if not isinstance(input_signatures, list):
             raise ValueError(
                 'invalid procedure input signatures')
-
-        input_signatures = [str(sig) for sig in input_signatures]
+        input_signatures = [get_full_signature(
+            sig) for sig in input_signatures]
 
         output_signatures = procedure_object.get(
             keyword_procedure_output_signatures, [])
         if not isinstance(output_signatures, list):
             raise ValueError(
                 'invalid procedure output signatures')
-
-        output_signatures = [str(sig) for sig in output_signatures]
+        output_signatures = [get_full_signature(
+            sig) for sig in output_signatures]
 
         procedure = self.procedure_factory.create(
             'composite',
@@ -121,7 +133,7 @@ class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
         )
         assert (
             isinstance(procedure, IProcedure) and
-            isinstance(procedure, IProcedureDetail)
+            isinstance(procedure, IProcedureLink)
         )
 
         procedure_joints = procedure_object.get(keyword_joints, [])

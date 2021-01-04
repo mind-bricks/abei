@@ -1,13 +1,15 @@
 __all__ = [
     'IProcedure',
+    'IProcedureClass',
     'IProcedureFactory',
-    'IProcedureDetail',
 
     'IProcedureData',
+    'IProcedureDataClass',
     'IProcedureDataFactory',
 
     'IProcedureJoint',
     'IProcedureJointFactory',
+    'IProcedureLink',
 
     'IProcedureSite',
     'IProcedureSiteFactory',
@@ -17,25 +19,23 @@ __all__ = [
 
 from .base import (
     IProcedure,
+    IProcedureClass,
     IProcedureFactory,
 )
-
+from .builder import (
+    IProcedureBuilder,
+)
 from .data import (
     IProcedureData,
+    IProcedureDataClass,
     IProcedureDataFactory,
 )
-
 from .joint import (
-    IProcedureDetail,
+    IProcedureLink,
     IProcedureJoint,
     IProcedureJointFactory,
 )
-
 from .site import (
     IProcedureSite,
     IProcedureSiteFactory,
-)
-
-from .builder import (
-    IProcedureBuilder,
 )

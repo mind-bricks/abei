@@ -51,22 +51,58 @@ class IProcedure(IService):
         """
 
 
-class IProcedureFactory(IService):
+class IProcedureClass(IService):
+    @abstractmethod
+    def get_signature(self):
+        """
+        get signature of procedure class
+        :return:
+        """
 
     @abstractmethod
-    def create(self, class_name, **kwargs):
+    def get_docstring(self):
         """
-        create procedure
-        :param class_name:
+        get document string of procedure
+        :return:
+        """
+
+    @abstractmethod
+    def instantiate(self, *args, **kwargs):
+        """
+        instantiate procedure object
+        """
+
+
+class IProcedureFactory(IService):
+    @abstractmethod
+    def create(self, class_signature, *args, **kwargs):
+        """
+        create procedure directly
+        :param class_signature:
+        :param args:
         :param kwargs:
         :return:
         """
 
     @abstractmethod
-    def register_class(self, class_name, procedure_class, **kwargs):
+    def get_class(self, class_signature):
+        """
+        :param class_signature:
+        :return:
+        """
+
+    @abstractmethod
+    def query_class(self, class_signature):
+        """
+        :param class_signature:
+        :return:
+        """
+
+    @abstractmethod
+    def register_class(self, class_signature, procedure_class, **kwargs):
         """
         register procedure class
-        :param class_name:
+        :param class_signature:
         :param procedure_class:
         :param kwargs:
         :return:
