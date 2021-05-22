@@ -6,7 +6,7 @@ from abei.implements.util import (
 from abei.interfaces import (
     IProcedure,
     IProcedureLink,
-    IProcedureFactory,
+    IProcedureFuncFactory,
     IProcedureJointFactory,
     IProcedureBuilder,
     service_entry as _,
@@ -83,7 +83,7 @@ class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
 
     @LazyProperty
     def procedure_factory(self):
-        return self.service_site.get_service(_(IProcedureFactory))
+        return self.service_site.get_service(_(IProcedureFuncFactory))
 
     @LazyProperty
     def procedure_joint_factory(self):
@@ -163,7 +163,11 @@ class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
             if j is not None:
                 joint_validate_dependents(j)
 
-        procedure.set_joints(output_joints, output_indices)
+        procedure.set_joints(
+            output_joints,
+            output_indices,
+            [i for i in range(len(output_joints))],
+        )
         procedure_site.register_procedure(procedure)
 
     def load_joints(self, procedure_site, procedure, joint_objects):
@@ -177,7 +181,12 @@ class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
                 raise ValueError('invalid procedure joint config')
 
             joint_object.instance.set_joints(
-                *self.load_joint_inputs(joint_inputs, joint_objects))
+                *self.load_joint_inputs(
+                    joint_inputs,
+                    joint_objects,
+                ),
+                [i for i in range(len(joint_inputs))],
+            )
 
     @staticmethod
     def load_joint_inputs(joint_inputs, joint_objects):

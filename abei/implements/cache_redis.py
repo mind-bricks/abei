@@ -12,6 +12,7 @@ class Cache(ICache):
     def __init__(self, service_site, **kwargs):
         service = service_site.get_service(_(IService, 'redis'))
         self.redis = service.redis
+
         print("----cache_redis component initialized----")
 
     def get_value(self, key):
@@ -20,7 +21,7 @@ class Cache(ICache):
     def set_value(self, key, value, expire):
         return bool(
             self.redis.set(key, value) if expire is None else
-            self.redis.setex(key, value, expire)
+            self.redis.setex(key, expire, value)
         )
 
     def set_value_if_match(self, key, value, match, expire):

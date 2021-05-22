@@ -1,6 +1,7 @@
 from importlib import import_module
 
 from abei.interfaces import (
+    IService,
     IServiceSite,
     IServiceBuilder,
     ServiceEntry,
@@ -50,7 +51,11 @@ class ServiceSite(IServiceSite):
     def register_service(self, entries, service_class, **kwargs):
         assert isinstance(entries, (tuple, list))
         # ensure dependencies first
-        service_class.ensure_dependencies()
+        ensure_dependencies_func = getattr(
+            service_class, 'ensure_dependencies', None)
+        if callable(ensure_dependencies_func):
+            ensure_dependencies_func()
+
         # create service instance
         service = service_class(self, **kwargs)
         for e in entries:

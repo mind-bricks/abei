@@ -1,34 +1,39 @@
+from typing import (
+    Dict,
+    Optional
+)
+
 from abei.interfaces import (
-    IProcedure,
-    IProcedureClass,
-    IProcedureFactory,
-    IProcedureData,
+    IProcedureFunc,
+    IProcedureFuncClass,
+    IProcedureParam,
     IProcedureLink,
 )
-from .procedure_joint_basic import (
-    joint_validate,
-    joint_run,
-)
 
 
-class ProcedureBasic(IProcedure):
+class ProcedureFuncBasic(IProcedureFunc):
     signature = 'NA'
     docstring = 'NA'
-    input_signatures = []
-    output_signatures = []
+    input_signatures = {}
+    output_signatures = {}
 
     def __init__(
             self,
-            signature=None,
-            docstring=None,
-            input_signatures=None,
-            output_signatures=None,
+            procedure_func_class: IProcedureFuncClass,
+            signature: Optional[str] = None,
+            docstring: Optional[str] = None,
+            input_signatures: Optional[Dict[int, str]] = None,
+            output_signatures: Optional[Dict[int, str]] = None,
             **kwargs,
     ):
-        self.signature = signature or self.signature
-        self.docstring = docstring or self.docstring
+        self.procedure_func_class = procedure_func_class
+        self.signature: str = signature or self.signature
+        self.docstring: str = docstring or self.docstring
         self.input_signatures = input_signatures or self.input_signatures
         self.output_signatures = output_signatures or self.output_signatures
+
+    def get_class(self):
+        return self.procedure_func_class
 
     def get_signature(self):
         return self.signature
@@ -45,50 +50,52 @@ class ProcedureBasic(IProcedure):
     def set_docstring(self, docstring):
         self.docstring = docstring
 
-    def run(self, procedure_data_list, **kwargs):
-        # assert isinstance(kwargs.setdefault('procedure_cache', {}), dict)
-        return (
-            self.run_normally(procedure_data_list, **kwargs) if
-            self.run_validation(
-                procedure_data_list, self.input_signatures) else
-            self.run_exceptionally(procedure_data_list, **kwargs)
-        )
-
-    @staticmethod
-    def run_validation(procedure_data_list, signatures):
-        if len(procedure_data_list) != len(signatures):
+    def valid_input(self, procedure_args):
+        if len(procedure_args) != len(self.input_signatures):
             raise AssertionError('invalid data list')
 
         has_missing_params = False
-        for d, sig in zip(procedure_data_list, signatures):
-            if d is None:
+        for i, arg in procedure_args.items():
+            if arg is None:
                 has_missing_params = True
                 continue
-            if not isinstance(d, IProcedureData):
-                raise AssertionError('invalid data list')
-            if d.get_class().get_signature() != sig:
-                raise AssertionError('data signature miss match')
+
+            sig = self.input_signatures.get(i)
+            if sig is None:
+                raise AssertionError(f'invalid procedure arg index {i}')
+
+            if not isinstance(arg, IProcedureParam):
+                raise AssertionError(f'invalid procedure arg {str(arg)}')
+
+            if arg.get_class().get_signature() != sig:
+                raise AssertionError('procedure arg signature miss match')
 
         return not has_missing_params
 
-    def run_normally(self, procedure_data_list, **kwargs):
-        return [None] * len(self.output_signatures)
+    def run(self, procedure_args, **kwargs):
+        if not self.valid_input(procedure_args):
+            return self.run_exceptionally(procedure_args, **kwargs)
 
-    def run_exceptionally(self, procedure_data_list, **kwargs):
-        return [None] * len(self.output_signatures)
+        return self.run_normally(procedure_args, **kwargs)
+
+    def run_normally(self, procedure_args, **kwargs):
+        return {i: None for i in self.output_signatures.keys()}
+
+    def run_exceptionally(self, procedure_args, **kwargs):
+        return {i: None for i in self.output_signatures.keys()}
 
 
-class ProcedureClassBasic(IProcedureClass):
+class ProcedureFuncClassBasic(IProcedureFuncClass):
     def __init__(
             self,
             signature,
             docstring,
-            procedure_type,
+            procedure_func_type,
             **kwargs,
     ):
         self.signature = signature
         self.docstring = docstring
-        self.procedure_type = procedure_type
+        self.procedure_type = procedure_func_type
         self.kwargs = kwargs
 
     def get_signature(self):
@@ -122,30 +129,49 @@ class ProcedureClassBasic(IProcedureClass):
         return '{} for {}'.format(self.docstring, data_class.get_signature())
 
 
-class ProcedureComposite(IProcedureLink, ProcedureBasic):
+class ProcedureFuncComposite(ProcedureFuncBasic, IProcedureLink):
     output_joints = []
     output_indices = []
+    indices = []
 
-    def get_joints(self):
-        return [(f, i) for f, i in zip(
-            self.output_joints, self.output_indices)]
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    def set_joints(self, joints, indices):
-        joint_validate(
-            joints,
-            indices,
+    def get_ref_func(self):
+        pass
+
+    def get_imp_func(self):
+        pass
+
+    def get_links(self):
+        pass
+
+    def link(
             self,
-            self.output_signatures,
-        )
-        self.output_joints = joints
-        self.output_indices = indices
+            input_index: int,
+            func_output_index: int,
+            func_ref,
+    ):
+        pass
 
-    def run_normally(self, procedure_data_list, **kwargs):
-        return [
-            joint_run(joint, procedure_data_list, **kwargs)[i] if
-            joint else procedure_data_list[i]
-            for joint, i in self.get_joints()
-        ]
+    def unlink(
+            self,
+            input_index: int
+    ):
+        pass
+
+    def run_normally(self, procedure_args, **kwargs):
+        return {
+            # i: (
+            #     joint_run(
+            #         in_joint,
+            #         procedure_data_list,
+            #         **kwargs
+            #     )[in_i] if
+            #     in_joint else procedure_data_list[in_i]
+            # )
+            # for in_joint, in_i, i in self.get_joints()
+        }
 
 
 class ProcedureClassComposite(IProcedureClass):
@@ -156,10 +182,10 @@ class ProcedureClassComposite(IProcedureClass):
         return 'composite procedure class'
 
     def instantiate(self, *args, **kwargs):
-        return ProcedureComposite(*args, **kwargs)
+        return ProcedureFuncComposite(*args, **kwargs)
 
 
-class ProcedureUnaryOperator(ProcedureBasic):
+class ProcedureFuncUnaryOperator(ProcedureFuncBasic):
 
     def __init__(
             self,
@@ -181,7 +207,7 @@ class ProcedureUnaryOperator(ProcedureBasic):
         return [ret]
 
 
-class ProcedureBinaryOperator(ProcedureBasic):
+class ProcedureFuncBinaryOperator(ProcedureFuncBasic):
     # native_function = staticmethod(lambda x, y: x)
 
     def __init__(
@@ -211,7 +237,7 @@ class ProcedureBinaryOperator(ProcedureBasic):
         return [ret]
 
 
-class ProcedureComparator(ProcedureBasic):
+class ProcedureFuncComparator(ProcedureFuncBasic):
     def __init__(
             self,
             *args,
@@ -241,7 +267,7 @@ class ProcedureComparator(ProcedureBasic):
         return [ret]
 
 
-class ProcedureProbe(ProcedureBasic):
+class ProcedureFuncProbe(ProcedureFuncBasic):
     def __init__(
             self,
             *args,
@@ -270,7 +296,7 @@ class ProcedureProbe(ProcedureBasic):
         return self.run_normally(procedure_data_list, **kwargs)
 
 
-class ProcedureDiverge2(ProcedureBasic):
+class ProcedureFuncDiverge2(ProcedureFuncBasic):
 
     def __init__(
             self,
@@ -300,7 +326,7 @@ class ProcedureDiverge2(ProcedureBasic):
         return self.run_normally(procedure_data_list, **kwargs)
 
 
-class ProcedureConverge2(ProcedureBasic):
+class ProcedureFuncConverge2(ProcedureFuncBasic):
 
     def __init__(
             self,
@@ -330,7 +356,7 @@ class ProcedureConverge2(ProcedureBasic):
         return self.run_normally(procedure_data_list, **kwargs)
 
 
-class ProcedureCast(ProcedureBasic):
+class ProcedureFuncCast(ProcedureFuncBasic):
 
     def __init__(
             self,
@@ -355,161 +381,161 @@ class ProcedureCast(ProcedureBasic):
 procedure_class_composite = ProcedureClassComposite()
 
 # bool procedure classes ----------------------------------
-procedure_class_not = ProcedureClassBasic(
+procedure_class_not = ProcedureFuncClassBasic(
     signature='not',
     docstring='logic not',
-    procedure_type=ProcedureUnaryOperator,
+    procedure_func_type=ProcedureFuncUnaryOperator,
     native_function=lambda x: not x,
 )
-procedure_class_and = ProcedureClassBasic(
+procedure_class_and = ProcedureFuncClassBasic(
     signature='and',
     docstring='logic and',
-    procedure_type=ProcedureBinaryOperator,
+    procedure_func_type=ProcedureFuncBinaryOperator,
     native_function=lambda x, y: x and y,
 )
-procedure_class_or = ProcedureClassBasic(
+procedure_class_or = ProcedureFuncClassBasic(
     signature='or',
     docstring='logic or',
-    procedure_type=ProcedureBinaryOperator,
+    procedure_func_type=ProcedureFuncBinaryOperator,
     native_function=lambda x, y: x or y,
 )
 
 # calculation procedure classes ---------------------------
-procedure_class_negate = ProcedureClassBasic(
+procedure_class_negate = ProcedureFuncClassBasic(
     signature='neg',
     docstring='negate operator',
-    procedure_type=ProcedureUnaryOperator,
+    procedure_func_type=ProcedureFuncUnaryOperator,
     native_function=lambda x: not x,
 )
-procedure_class_add = ProcedureClassBasic(
+procedure_class_add = ProcedureFuncClassBasic(
     signature='add',
     docstring='add operator',
-    procedure_type=ProcedureBinaryOperator,
+    procedure_func_type=ProcedureFuncBinaryOperator,
     native_function=lambda x, y: x + y,
 )
-procedure_class_subtract = ProcedureClassBasic(
+procedure_class_subtract = ProcedureFuncClassBasic(
     signature='sub',
     docstring='subtract operator',
-    procedure_type=ProcedureBinaryOperator,
+    procedure_func_type=ProcedureFuncBinaryOperator,
     native_function=lambda x, y: x - y,
 )
-procedure_class_multiply = ProcedureClassBasic(
+procedure_class_multiply = ProcedureFuncClassBasic(
     signature='mul',
     docstring='multiply operator',
-    procedure_type=ProcedureBinaryOperator,
+    procedure_func_type=ProcedureFuncBinaryOperator,
     native_function=lambda x, y: x * y,
 )
-procedure_class_divide = ProcedureClassBasic(
+procedure_class_divide = ProcedureFuncClassBasic(
     signature='div',
     docstring='divide operator',
-    procedure_type=ProcedureBinaryOperator,
+    procedure_func_type=ProcedureFuncBinaryOperator,
     native_function=lambda x, y: x / y,
 )
-procedure_class_modulo = ProcedureClassBasic(
+procedure_class_modulo = ProcedureFuncClassBasic(
     signature='mod',
     docstring='modulo operator',
-    procedure_type=ProcedureBinaryOperator,
+    procedure_func_type=ProcedureFuncBinaryOperator,
     native_function=lambda x, y: x % y,
 )
-procedure_class_mod_divide = ProcedureClassBasic(
+procedure_class_mod_divide = ProcedureFuncClassBasic(
     signature='modDiv',
     docstring='modulo divide operator',
-    procedure_type=ProcedureBinaryOperator,
+    procedure_func_type=ProcedureFuncBinaryOperator,
     native_function=lambda x, y: x // y,
 )
-procedure_class_square = ProcedureClassBasic(
+procedure_class_square = ProcedureFuncClassBasic(
     signature='sq',
     docstring='square operator',
-    procedure_type=ProcedureUnaryOperator,
+    procedure_func_type=ProcedureFuncUnaryOperator,
     native_function=lambda x: x * x,
 )
-procedure_class_power = ProcedureClassBasic(
+procedure_class_power = ProcedureFuncClassBasic(
     signature='pow',
     docstring='power operator',
-    procedure_type=ProcedureBinaryOperator,
+    procedure_func_type=ProcedureFuncBinaryOperator,
     native_function=lambda x, y: x ** y,
 )
 
 # comparision procedure classes ---------------------------
-procedure_class_equal = ProcedureClassBasic(
+procedure_class_equal = ProcedureFuncClassBasic(
     signature='eq',
     docstring='equal',
-    procedure_type=ProcedureComparator,
+    procedure_func_type=ProcedureFuncComparator,
     native_function=lambda x, y: x == y,
 )
-procedure_class_not_equal = ProcedureClassBasic(
+procedure_class_not_equal = ProcedureFuncClassBasic(
     signature='ne',
     docstring='not equal',
-    procedure_type=ProcedureComparator,
+    procedure_func_type=ProcedureFuncComparator,
     native_function=lambda x, y: x != y,
 )
-procedure_class_less_than = ProcedureClassBasic(
+procedure_class_less_than = ProcedureFuncClassBasic(
     signature='lt',
     docstring='less than',
-    procedure_type=ProcedureComparator,
+    procedure_func_type=ProcedureFuncComparator,
     native_function=lambda x, y: x < y,
 )
-procedure_class_less_than_or_equal = ProcedureClassBasic(
+procedure_class_less_than_or_equal = ProcedureFuncClassBasic(
     signature='lte',
     docstring='less than or equal',
-    procedure_type=ProcedureComparator,
+    procedure_func_type=ProcedureFuncComparator,
     native_function=lambda x, y: x <= y,
 )
-procedure_class_greater_than = ProcedureClassBasic(
+procedure_class_greater_than = ProcedureFuncClassBasic(
     signature='gt',
     docstring='greater than',
-    procedure_type=ProcedureComparator,
+    procedure_func_type=ProcedureFuncComparator,
     native_function=lambda x, y: x > y,
 )
-procedure_class_greater_than_or_equal = ProcedureClassBasic(
+procedure_class_greater_than_or_equal = ProcedureFuncClassBasic(
     signature='gte',
     docstring='greater than or equal',
-    procedure_type=ProcedureComparator,
+    procedure_func_type=ProcedureFuncComparator,
     native_function=lambda x, y: x >= y,
 )
 
 # probe class --------------------------------------------
-procedure_class_probe = ProcedureClassBasic(
+procedure_class_probe = ProcedureFuncClassBasic(
     signature='probe',
     docstring='probe',
-    procedure_type=ProcedureProbe,
+    procedure_func_type=ProcedureFuncProbe,
 )
 
 # data class cast -----------------------------------------
-procedure_class_cast_2_bool = ProcedureClassBasic(
+procedure_class_cast_2_bool = ProcedureFuncClassBasic(
     signature='castToBool',
     docstring='cast to bool',
-    procedure_type=ProcedureCast,
+    procedure_func_type=ProcedureFuncCast,
     native_function=lambda x: bool(x),
 )
-procedure_class_cast_2_int = ProcedureClassBasic(
+procedure_class_cast_2_int = ProcedureFuncClassBasic(
     signature='castToInt',
     docstring='cast to int',
-    procedure_type=ProcedureCast,
+    procedure_func_type=ProcedureFuncCast,
     native_function=lambda x: int(x),
 )
-procedure_class_cast_2_float = ProcedureClassBasic(
+procedure_class_cast_2_float = ProcedureFuncClassBasic(
     signature='castToFloat',
     docstring='cast to float',
-    procedure_type=ProcedureCast,
+    procedure_func_type=ProcedureFuncCast,
     native_function=lambda x: float(x),
 )
 
 # data flow control ---------------------------------------
-procedure_class_diverge = ProcedureClassBasic(
+procedure_class_diverge = ProcedureFuncClassBasic(
     signature='diverge2',
     docstring='diverge 1 branch to 2',
-    procedure_type=ProcedureDiverge2,
+    procedure_func_type=ProcedureFuncDiverge2,
 )
-procedure_class_converge = ProcedureClassBasic(
+procedure_class_converge = ProcedureFuncClassBasic(
     signature='converge2',
     docstring='converge 2 branches to 1',
-    procedure_type=ProcedureConverge2,
+    procedure_func_type=ProcedureFuncConverge2,
 )
 
 
 # implement procedure class factory -----------------------
-class ProcedureFactory(IProcedureFactory):
+class ProcedureFuncFactory(IProcedureFunc):
     """
     basic procedure class factory
     """

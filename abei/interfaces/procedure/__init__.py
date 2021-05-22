@@ -1,41 +1,41 @@
 __all__ = [
-    'IProcedure',
-    'IProcedureClass',
-    'IProcedureFactory',
+    'IProcedureFunc',
+    'IProcedureFuncSite',
+    'IProcedureFuncClass',
+    'IProcedureFuncClassSite',
 
-    'IProcedureData',
-    'IProcedureDataClass',
-    'IProcedureDataFactory',
+    'IProcedureParam',
+    'IProcedureParamClass',
+    'IProcedureParamClassSite',
 
-    'IProcedureJoint',
-    'IProcedureJointFactory',
     'IProcedureLink',
+    'IProcedureLinkSite',
 
     'IProcedureSite',
-    'IProcedureSiteFactory',
+    'IProcedureSiteClass',
 
     'IProcedureBuilder',
 ]
 
-from .base import (
-    IProcedure,
-    IProcedureClass,
-    IProcedureFactory,
-)
-from .builder import (
+from .procedure_builder import (
     IProcedureBuilder,
 )
-from .data import (
-    IProcedureData,
-    IProcedureDataClass,
-    IProcedureDataFactory,
+from .procedure_func import (
+    IProcedureFunc,
+    IProcedureFuncSite,
+    IProcedureFuncClass,
+    IProcedureFuncClassSite,
 )
-from .joint import (
+from .procedure_link import (
     IProcedureLink,
-    IProcedureJoint,
-    IProcedureJointFactory,
+    IProcedureLinkSite,
 )
-from .site import (
+from .procedure_param import (
+    IProcedureParam,
+    IProcedureParamClass,
+    IProcedureParamClassSite,
+)
+from .procedure_site import (
     IProcedureSite,
-    IProcedureSiteFactory,
+    IProcedureSiteClass,
 )

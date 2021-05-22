@@ -5,11 +5,11 @@ import unittest
 from abei.interfaces import (
     IProcedureBuilder,
     IProcedure,
-    IProcedureFactory,
+    IProcedureFuncFactory,
     IProcedureDataFactory,
     IProcedureJoint,
     IProcedureJointFactory,
-    IProcedureSite,
+    IProcedureFuncSite,
     IProcedureSiteFactory,
     service_entry as _
 )
@@ -44,7 +44,7 @@ class TestProcedure(TestCaseBasic):
     ]
 
     def test_procedure_factory(self):
-        service = self.service_site.get_service(_(IProcedureFactory))
+        service = self.service_site.get_service(_(IProcedureFuncFactory))
         procedure_classes = list(service.iterate_classes())
         procedure_class_count = len(procedure_classes)
         self.assertNotEqual(procedure_class_count, 0)
@@ -72,7 +72,7 @@ class TestProcedure(TestCaseBasic):
         self.assertIs(instance.get_class(), data_class_test)
 
     def test_procedure_joint_factory(self):
-        factory_p = self.service_site.get_service(_(IProcedureFactory))
+        factory_p = self.service_site.get_service(_(IProcedureFuncFactory))
         factory_d = self.service_site.get_service(_(IProcedureDataFactory))
         outer_procedure = factory_p.create('composite')
         inner_procedure = factory_p.create(
@@ -109,7 +109,7 @@ class TestProcedure(TestCaseBasic):
         self.assertIsNone(procedure_4)
 
         base_sites = instance.get_base_sites()
-        self.assertIsInstance(instance, IProcedureSite)
+        self.assertIsInstance(instance, IProcedureFuncSite)
         self.assertEqual(len(base_sites), 1)
 
         instance = base_sites[0]

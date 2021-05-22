@@ -4,10 +4,10 @@ from uuid import uuid1
 from abei.interfaces import (
     IProcedure,
     IProcedureDataClass,
-    IProcedureSite,
+    IProcedureFuncSite,
     IProcedureSiteFactory,
     IProcedureDataFactory,
-    IProcedureFactory,
+    IProcedureFuncFactory,
     service_entry as _
 )
 from abei.implements.util import LazyProperty
@@ -31,7 +31,7 @@ class ProcedureDataClassWrapper(IProcedureDataClass):
         return self.data.instantiate(*args, data_class=self, **kwargs)
 
 
-class ProcedureSiteBuiltin(IProcedureSite):
+class ProcedureFuncSiteBuiltin(IProcedureFuncSite):
     def __init__(self):
         self.data = {}
         self.procedures = {}
@@ -103,7 +103,7 @@ class ProcedureSiteBuiltin(IProcedureSite):
         return []
 
 
-class ProcedureSiteBasic(IProcedureSite):
+class ProcedureFuncSiteBasic(IProcedureFuncSite):
 
     def __init__(self, signature=None, dependencies=None):
         # signature will be set to random string if not specified
@@ -266,7 +266,7 @@ class ProcedureSiteFactory(IProcedureSiteFactory):
 
     @LazyProperty
     def builtin(self):
-        instance = ProcedureSiteBuiltin()
+        instance = ProcedureFuncSiteBuiltin()
         instance.load_data_class([
             'bool',
             'int',
@@ -275,7 +275,7 @@ class ProcedureSiteFactory(IProcedureSiteFactory):
         ], self.service_site.get_service(_(IProcedureDataFactory)))
         instance.load(
             self.builtin_config,
-            self.service_site.get_service(_(IProcedureFactory))
+            self.service_site.get_service(_(IProcedureFuncFactory))
         )
         return instance
 
@@ -283,7 +283,7 @@ class ProcedureSiteFactory(IProcedureSiteFactory):
         if not procedure_sites and not signature:
             return self.builtin
 
-        return ProcedureSiteBasic(
+        return ProcedureFuncSiteBasic(
             signature=signature,
             dependencies=procedure_sites or [self.builtin],
         )

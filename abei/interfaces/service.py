@@ -3,6 +3,14 @@ from abc import (
     abstractmethod,
 )
 
+from typing import (
+    Callable,
+    Iterator,
+    Optional,
+    TextIO,
+    Union,
+)
+
 
 def service_entry(interface, name=None):
     return ServiceEntry(interface, name)
@@ -20,7 +28,7 @@ class IService(metaclass=ABCMeta):
     """
 
     @classmethod
-    def ensure_dependencies(cls):
+    def ensure_dependencies(cls) -> None:
         """
         install all dependencies of current service
         """
@@ -28,20 +36,25 @@ class IService(metaclass=ABCMeta):
 
 class IServiceSite(IService):
     @abstractmethod
-    def get_service(self, entry):
+    def get_service(self, entry: ServiceEntry) -> IService:
         """
         get service instance by service entry
         raise exception if no service found
         """
 
     @abstractmethod
-    def query_service(self, entry):
+    def query_service(self, entry: ServiceEntry) -> Optional[IService]:
         """
         query service instance by service entry
         """
 
     @abstractmethod
-    def register_service(self, entries, service_class, **kwargs):
+    def register_service(
+            self,
+            entries: Iterator[ServiceEntry],
+            service_class: Callable,
+            **kwargs,
+    ) -> IService:
         """
         register service with service entries
         """
@@ -50,25 +63,41 @@ class IServiceSite(IService):
 class IServiceBuilder(IService):
 
     @abstractmethod
-    def load_json(self, service_site, file_or_filename):
+    def load_json(
+            self,
+            service_site: IServiceSite,
+            file_or_filename: Union[str, TextIO],
+    ):
         """
         register service to service site by reading configuration file
         """
 
     @abstractmethod
-    def save_json(self, service_site, file_or_filename):
+    def save_json(
+            self,
+            service_site: IServiceSite,
+            file_or_filename: Union[str, TextIO],
+    ):
         """
         save service from service site to configuration file
         """
 
     @abstractmethod
-    def load_yaml(self, service_site, file_or_filename):
+    def load_yaml(
+            self,
+            service_site: IServiceSite,
+            file_or_filename: Union[str, TextIO],
+    ):
         """
         register service to service site by reading configuration file
         """
 
     @abstractmethod
-    def save_yaml(self, service_site, file_or_filename):
+    def save_yaml(
+            self,
+            service_site: IServiceSite,
+            file_or_filename: Union[str, TextIO],
+    ):
         """
         save service from service site to configuration file
         """
